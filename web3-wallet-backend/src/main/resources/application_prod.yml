@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: Web3 Wallet Backend (prod)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wallet_db
+    username: wallet
+    password: wallet
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true

@@ -380,6 +380,165 @@ gas_price_wei
 
 ---
 
+## Phase 5: Layer 2 Rollup Integration (Weeks 21-24)
+
+### Week 21: Rollup Architecture & Planning
+**Goal:** Design and plan L2 rollup integration with existing wallet backend
+
+#### Monday-Tuesday: Architecture Design
+- Study OP Stack architecture and components
+- Design routing decision engine (L1 vs L2)
+- Plan monorepo structure for rollup components
+- Define integration points with existing wallet
+
+```
+wallet-rollup/
+├── cryptowallet1/          (existing wallet backend)
+├── rollup-node/           (OP Stack L2 node)
+├── bridge-service/        (deposit/withdrawal service)
+├── explorer-ui/           (rollup block explorer)
+└── docker-compose.yml     (orchestration)
+```
+
+#### Wednesday-Thursday: Routing Service Design
+- Design transaction routing logic
+- Define thresholds for L1/L2 decisions
+- Plan API modifications for route parameter
+- Design fallback mechanisms
+
+```java
+@Service
+public class TransactionRouter {
+    public Route determineRoute(TransactionRequest tx) {
+        // Amount-based routing
+        // Gas price consideration
+        // User preference override
+        // Network congestion check
+        return tx.amount > THRESHOLD ? Route.L1 : Route.L2;
+    }
+}
+```
+
+#### Friday-Sunday: Development Environment
+- Set up monorepo structure
+- Configure Docker Compose for all services
+- Prepare test networks (local L1 + L2)
+- Document architecture decisions
+
+**Deliverable:** Complete architecture design and development environment
+
+---
+
+### Week 22: Rollup Node Implementation
+**Goal:** Deploy and configure OP Stack rollup node
+
+#### Monday-Tuesday: OP Stack Setup
+- Fork OP Stack repository
+- Configure genesis block and chain parameters
+- Set up sequencer node
+- Configure batch submission to L1
+
+```yaml
+# rollup-config.yaml
+l1_chain_id: 1
+l2_chain_id: 42069
+sequencer_address: "0x..."
+batch_inbox_address: "0x..."
+deposit_contract_address: "0x..."
+```
+
+#### Wednesday-Thursday: Node Operations
+- Implement block production
+- Configure state commitment intervals
+- Set up fraud proof window
+- Test transaction execution
+
+#### Friday-Sunday: Integration with Wallet
+- Connect wallet backend to rollup RPC
+- Implement dual-network transaction sending
+- Add rollup balance queries
+- Test end-to-end transaction flow
+
+**Deliverable:** Running L2 rollup node processing transactions
+
+---
+
+### Week 23: Bridge Service Development
+**Goal:** Build bridge for L1↔L2 asset transfers
+
+#### Monday-Tuesday: Deposit Flow
+- Implement L1 deposit contract interaction
+- Create deposit event monitoring
+- Build L2 credit minting logic
+- Add deposit status tracking
+
+```java
+@Service
+public class BridgeService {
+    public DepositResult deposit(DepositRequest request) {
+        // Lock tokens on L1
+        // Emit deposit event
+        // Wait for L2 inclusion
+        // Confirm L2 balance update
+    }
+}
+```
+
+#### Wednesday-Thursday: Withdrawal Flow
+- Implement L2 withdrawal initiation
+- Build proof generation system
+- Create L1 withdrawal finalizer
+- Add challenge period handling
+
+#### Friday-Sunday: Bridge UI & Testing
+- Create bridge frontend interface
+- Implement deposit/withdrawal status page
+- Test various asset types (ETH, ERC-20)
+- Load test bridge operations
+
+**Deliverable:** Functional bridge supporting bidirectional transfers
+
+---
+
+### Week 24: Explorer & Production Readiness
+**Goal:** Complete rollup explorer and prepare for production
+
+#### Monday-Tuesday: Explorer Development
+- Build block explorer UI (React + Ethers.js)
+- Display rollup blocks and transactions
+- Show L1 data availability batches
+- Implement search functionality
+
+```javascript
+// Explorer components
+const ExplorerUI = () => {
+  return (
+    <div>
+      <BlockList />
+      <TransactionTable />
+      <BridgeStatus />
+      <NetworkStats />
+    </div>
+  );
+};
+```
+
+#### Wednesday-Thursday: Monitoring & Analytics
+- Add rollup-specific metrics to Prometheus
+- Create Grafana dashboards for L2 metrics
+- Implement cost analysis (L1 vs L2 savings)
+- Set up alerting for rollup issues
+
+#### Friday-Sunday: Final Integration Testing
+- End-to-end testing of complete system
+- Performance benchmarking (TPS, latency)
+- Security audit of rollup components
+- Documentation and deployment guide
+
+**Deliverable:** Production-ready L2 rollup with explorer and monitoring
+
+---
+
 ## 📚 Ongoing Learning Resources
 
 ### Books

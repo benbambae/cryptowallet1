@@ -38,6 +38,7 @@ This backend service provides a robust foundation for Web3 wallet operations, en
 
 ## 🏗️ Architecture
 
+### Current Wallet Backend Structure
 ```
 web3-wallet-backend/
 ├── src/main/java/com/wallet/
@@ -52,6 +53,7 @@ web3-wallet-backend/
 │   ├── blockchain/
 │   │   ├── client/            # Web3j client management
 │   │   ├── transaction/       # Transaction builders and processors
+│   │   ├── routing/           # L1/L2 transaction routing engine
 │   │   └── contract/          # Smart contract interactions
 │   ├── security/
 │   │   ├── auth/              # Authentication/authorization
@@ -68,6 +70,27 @@ web3-wallet-backend/
 ├── docker/                    # Docker configurations
 ├── k8s/                       # Kubernetes manifests
 └── docs/                      # API documentation and guides 
+```
+
+### Full Monorepo Structure (with L2 Rollup)
+```
+wallet-rollup/
+├── cryptowallet1/              # Existing Java Spring Boot wallet backend
+│   └── web3-wallet-backend/   # Core wallet service with L1/L2 routing
+├── rollup-node/               # OP Stack L2 node (Go/Rust)
+│   ├── sequencer/             # Block production and sequencing
+│   ├── batcher/               # Batch submission to L1
+│   └── proposer/              # State root proposals
+├── bridge-service/            # Bridge microservice (Node.js/Go)
+│   ├── deposits/              # L1 → L2 deposit handling
+│   ├── withdrawals/           # L2 → L1 withdrawal processing
+│   └── proofs/                # Merkle proof generation
+├── explorer-ui/               # Rollup block explorer (React)
+│   ├── components/            # UI components
+│   ├── services/              # API integration
+│   └── utils/                 # Ethers.js utilities
+├── docker-compose.yml         # Full stack orchestration
+└── docs/                      # Architecture diagrams and guides
 ```
 
 ## 🚀 API Endpoints
@@ -126,7 +149,7 @@ GET /api/v1/wallets/{address}/balance?tokens=ETH,USDT,USDC&chain=ethereum
 }
 ```
 
-#### Send Transaction
+#### Send Transaction (with L1/L2 Routing)
 ```http
 POST /api/v1/transactions
 Content-Type: application/json
@@ -137,7 +160,8 @@ Content-Type: application/json
   "value": "0.1",
   "token": "ETH",
   "gasStrategy": "fast",
-  "simulateFirst": true
+  "simulateFirst": true,
+  "route": "auto"  // Options: "L1", "L2", "auto" (automatic routing)
 }
 ```
 
@@ -149,7 +173,9 @@ Content-Type: application/json
   "gasUsed": "21000",
   "effectiveGasPrice": "30.5",
   "blockNumber": null,
-  "nonce": 42
+  "nonce": 42,
+  "layer": "L2",  // Indicates which layer processed the transaction
+  "estimatedSavings": "85%"  // Gas savings compared to L1
 }
 ```
 
@@ -325,20 +351,27 @@ kubectl apply -f k8s/ingress.yaml
 - [ ] Account abstraction (EIP-4337)
 - [ ] Gasless transactions (EIP-2771)
 
-### Phase 3: Multi-chain Support 📋
+### Phase 3: Layer 2 Rollup Integration 🚧
+- [x] Transaction routing service (L1/L2 decision engine)
+- [ ] OP Stack rollup node deployment
+- [ ] Bridge service for deposits/withdrawals
+- [ ] Rollup block explorer
+- [ ] Cost analysis dashboard (L1 vs L2 savings)
+
+### Phase 4: Multi-chain Support 📋
 - [ ] Polygon integration
 - [ ] Binance Smart Chain
 - [ ] Avalanche C-Chain
-- [ ] Layer 2 solutions (Arbitrum, Optimism)
+- [ ] Additional Layer 2 solutions (Arbitrum, zkSync)
 - [ ] Non-EVM chains (Solana, Bitcoin)
 
-### Phase 4: DeFi Integration 📋
+### Phase 5: DeFi Integration 📋
 - [ ] Uniswap V3 integration
 - [ ] Lending protocol support (Aave, Compound)
 - [ ] Yield aggregation
 - [ ] Cross-chain bridges
 
-### Phase 5: Enterprise Features 📋
+### Phase 6: Enterprise Features 📋
 - [ ] Advanced MPC implementation
 - [ ] Compliance tools (KYC/AML)
 - [ ] White-label solution

@@ -35,6 +35,13 @@
 			<artifactId>core</artifactId>
 			<version>4.10.3</version>
 		</dependency>
+		
+		<!-- BitcoinJ for BIP32/39/44 HD wallet support -->
+		<dependency>
+			<groupId>org.bitcoinj</groupId>
+			<artifactId>bitcoinj-core</artifactId>
+			<version>0.16.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>

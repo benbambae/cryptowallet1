@@ -45,8 +45,8 @@ public class WalletService {
             String address = "0x" + Keys.getAddress(keyPair.getPublicKey());
 
             Wallet wallet = new Wallet(address, publicKeyHex, privateKeyHex, BigDecimal.ZERO);
-            // Optional: immediately fetch balance
-            wallet.setBalance(getBalance(address));
+            // Note: Balance fetching removed to avoid Ethereum node dependency during wallet creation
+            // Balance can be fetched separately via getBalance() when needed
             return wallet;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create wallet", e);
@@ -68,7 +68,8 @@ public class WalletService {
             String address = "0x" + Keys.getAddress(keyPair.getPublicKey());
 
             Wallet wallet = new Wallet(address, publicKeyHex, add0x(normalized), BigDecimal.ZERO);
-            wallet.setBalance(getBalance(address));
+            // Note: Balance fetching removed to avoid Ethereum node dependency during wallet import
+            // Balance can be fetched separately via getBalance() when needed
             return wallet;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid private key", e);

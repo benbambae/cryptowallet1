@@ -26,25 +26,4 @@ public record TransactionStatusResponse(
         DROPPED,
         REPLACED
     }
-    
-    public static TransactionStatusResponse notFound(String hash) {
-        return new TransactionStatusResponse(
-            hash,
-            Status.DROPPED,
-            null,
-            0,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            "Transaction not found"
-        );
-    }
-    
-    public boolean isFinalized(int requiredConfirmations) {
-        return confirmations != null && confirmations >= requiredConfirmations;
-    }
 }

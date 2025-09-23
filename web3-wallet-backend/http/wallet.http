@@ -1,0 +1,40 @@
+### Create New Wallet
+POST http://localhost:8080/api/v1/wallet/create
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Import Wallet with Private Key
+POST http://localhost:8080/api/v1/wallet/import
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "privateKeyHex": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+}
+
+###
+
+### Get Wallet Balance
+GET http://localhost:8080/api/v1/wallet/0x742d35Cc6639C43B59123456789012345678901a/balance
+Authorization: Basic admin admin
+Accept: application/json
+
+###
+
+### Sign Message (Not Implemented - Returns 501)
+POST http://localhost:8080/api/v1/wallet/sign
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "address": "0x742d35Cc6639C43B59123456789012345678901a",
+  "message": "Hello, World!",
+  "privateKey": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+}
+
+###

@@ -30,15 +30,5 @@ public record TransactionHistoryResponse(
             OUTGOING,
             SELF
         }
-        
-        public static Direction determineDirection(String address, String from, String to) {
-            if (from.equalsIgnoreCase(address) && to.equalsIgnoreCase(address)) {
-                return Direction.SELF;
-            } else if (from.equalsIgnoreCase(address)) {
-                return Direction.OUTGOING;
-            } else {
-                return Direction.INCOMING;
-            }
-        }
     }
 }

@@ -1,0 +1,124 @@
+### Create HD Wallet (12 words, no storage)
+POST http://localhost:8080/api/wallets?words=12&store=false
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Create HD Wallet (24 words, with storage)
+POST http://localhost:8080/api/wallets?words=24&store=true
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Create HD Wallet (default 12 words, no storage)
+POST http://localhost:8080/api/wallets
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Derive Key from Mnemonic (index 0)
+POST http://localhost:8080/api/wallets/derive
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "index": 0,
+  "account": 0,
+  "change": 0
+}
+
+###
+
+### Derive Key from Mnemonic (index 1, different account)
+POST http://localhost:8080/api/wallets/derive
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "index": 1,
+  "account": 1,
+  "change": 0
+}
+
+###
+
+### Derive Key from Mnemonic (minimal request - defaults used)
+POST http://localhost:8080/api/wallets/derive
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "index": 2
+}
+
+###
+
+### Get Extended Public Key (account 0)
+POST http://localhost:8080/api/wallets/xpub
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "account": 0
+}
+
+###
+
+### Get Extended Public Key (account 1)
+POST http://localhost:8080/api/wallets/xpub
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "account": 1
+}
+
+###
+
+### Test Invalid Word Count (should fail)
+POST http://localhost:8080/api/wallets?words=15
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Test Invalid Mnemonic (should fail)
+POST http://localhost:8080/api/wallets/derive
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "invalid mnemonic phrase",
+  "index": 0
+}
+
+###
+
+### Test Negative Index (should fail)
+POST http://localhost:8080/api/wallets/derive
+Authorization: Basic admin admin
+Content-Type: application/json
+Accept: application/json
+
+{
+  "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+  "index": -1
+}

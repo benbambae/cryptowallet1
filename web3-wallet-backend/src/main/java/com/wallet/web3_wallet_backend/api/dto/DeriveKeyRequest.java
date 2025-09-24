@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * Request DTO for POST /api/wallets/derive endpoint.
  * Contains mnemonic and derivation parameters for BIP44 key derivation.
+ * BIP44 = Folder structure for key tree, so wallets know where to find addresses.
+ *  m / purpose' / coin_type' / account' / change / address_index
  */
 @Schema(description = "Request to derive a key from mnemonic using BIP44 path")
 public record DeriveKeyRequest(

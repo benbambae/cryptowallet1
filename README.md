@@ -1,6 +1,6 @@
-# 🪙 Web3 Wallet Backend - Enterprise-Grade Blockchain Infrastructure
+# 🪙 Web3 Wallet Backend - Production-Ready EVM Wallet Infrastructure
 
-**A production-ready Web3 wallet backend built with Java Spring Boot, designed for secure and scalable blockchain operations.**
+**A focused, high-performance Web3 wallet backend built with Java Spring Boot for managing wallets and transactions across EVM chains.**
 
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0+-green.svg)](https://spring.io/projects/spring-boot)
@@ -9,88 +9,97 @@
 
 ## 🎯 Overview
 
-This backend service provides a robust foundation for Web3 wallet operations, enabling secure wallet generation, balance tracking, and transaction management across Ethereum and EVM-compatible chains. Built with enterprise security standards and designed for high-throughput operations.
+A streamlined Web3 wallet backend service providing essential wallet management and transaction processing for Ethereum and EVM-compatible chains. Built for developers and businesses needing reliable wallet infrastructure without the complexity of DeFi integrations or compliance overhead.
 
 ## ✨ Core Features
 
 ### Wallet Management
 - **HD Wallet Generation** - BIP-32/39/44 compliant hierarchical deterministic wallets
-- **Multi-signature Support** - Native support for multi-sig wallet operations
-- **Key Management Service** - Integration-ready for AWS KMS, HashiCorp Vault, or HSM
-- **Account Abstraction** - EIP-4337 compatible smart wallet infrastructure
+- **Multi-signature Support** - Native 2-of-3, 3-of-5 multi-sig configurations
+- **Hardware Wallet Integration** - Support for Ledger and Trezor devices
+- **Import/Export** - Private keys, mnemonics, and Keystore file support
+- **Address Book** - Manage saved addresses with custom labels
 
 ### Transaction Processing
 - **EIP-1559 Compliance** - Dynamic fee management with base fee and priority tips
-- **Gas Optimization** - Intelligent gas estimation and automatic bump/replace mechanisms
+- **Gas Optimization** - Intelligent gas estimation and automatic retry with gas bumping
 - **Nonce Management** - Concurrent transaction handling with proper nonce sequencing
 - **Transaction Simulation** - Pre-flight checks using `eth_call` to prevent failed transactions
+- **Batch Transactions** - Queue and execute multiple transactions efficiently
+- **Meta-transactions** - EIP-2771 gasless transaction support via relayers
 
 ### Token Operations
-- **ERC-20 Support** - Full token transfer and balance tracking
-- **ERC-721/1155** - NFT operations including minting, transfers, and metadata
-- **Approval Management** - Secure allowance workflows with revocation capabilities
+- **ERC-20 Support** - Full token transfer, balance tracking, and approval management
+- **Basic NFT Support** - ERC-721/1155 transfers and ownership queries
+- **Token Discovery** - Automatic detection of new tokens in wallet
+- **Custom Token Lists** - Add and manage unlisted tokens
+- **Price Feeds** - Real-time token prices via CoinGecko/CoinMarketCap
 
-### Security & Compliance
-- **MPC/TSS Ready** - Multi-party computation for distributed key management
-- **JWT Authentication** - Stateless authentication with refresh token rotation
+### Security Features
+- **Encrypted Storage** - AES-256 encryption for sensitive data
+- **JWT Authentication** - Stateless auth with refresh token rotation
+- **2FA Support** - TOTP-based two-factor authentication
 - **Role-Based Access Control** - Granular permission management
-- **Audit Logging** - Comprehensive transaction and access logs
+- **Rate Limiting** - API throttling and DDoS protection
+- **Audit Trail** - Comprehensive logging of all operations
 
 ## 🏗️ Architecture
 
-### Current Wallet Backend Structure
+### System Architecture
+```
+┌─────────────────────────────────────────────┐
+│         Client Applications                 │
+│    (Web, Mobile, API Integrations)          │
+└──────────────▲──────────────────────────────┘
+               │ REST/WebSocket
+┌──────────────▼──────────────────────────────┐
+│         Web3 Wallet Backend                 │
+├──────────────────────────────────────────────┤
+│  • API Gateway (Rate limiting, Auth)        │
+│  • Wallet Service (HD, Multi-sig)           │
+│  • Transaction Engine (EIP-1559, Batching)  │
+│  • Token Manager (ERC-20, NFT basics)       │
+│  • Multi-chain Router (EVM networks)        │
+│  • Security Layer (JWT, Encryption, Audit)  │
+└──────────────┬──────────────────────────────┘
+               │
+    ┌──────────┼──────────┬──────────┐
+    ▼          ▼          ▼          ▼
+[Ethereum] [Polygon] [BSC] [Avalanche] [L2s]
+```
+
+### Project Structure
 ```
 web3-wallet-backend/
 ├── src/main/java/com/wallet/
 │   ├── api/
-│   │   ├── controller/         # REST endpoints with OpenAPI documentation
-│   │   ├── dto/               # Request/response models with validation
+│   │   ├── controller/         # REST endpoints with OpenAPI docs
+│   │   ├── dto/               # Request/response DTOs
 │   │   └── exception/         # Global exception handling
-│   ├── core/
-│   │   ├── service/           # Business logic layer
-│   │   ├── repository/        # Data access layer
-│   │   └── entity/            # Domain entities
+│   ├── service/
+│   │   ├── WalletService      # Core wallet operations
+│   │   ├── TransactionService # Transaction management
+│   │   ├── HdWalletService    # HD key derivation
+│   │   └── TokenService       # Token operations
 │   ├── blockchain/
-│   │   ├── client/            # Web3j client management
-│   │   ├── transaction/       # Transaction builders and processors
-│   │   ├── routing/           # L1/L2 transaction routing engine
+│   │   ├── client/            # Web3j client configuration
+│   │   ├── transaction/       # Transaction builder & gas manager
 │   │   └── contract/          # Smart contract interactions
 │   ├── security/
-│   │   ├── auth/              # Authentication/authorization
-│   │   ├── crypto/            # Encryption and key management
-│   │   └── audit/             # Audit trail implementation
+│   │   ├── auth/              # JWT authentication
+│   │   ├── crypto/            # Encryption utilities
+│   │   └── audit/             # Activity logging
 │   └── infrastructure/
-│       ├── config/            # Application configuration
-│       ├── cache/             # Redis caching layer
-│       └── messaging/         # Event streaming (Kafka/RabbitMQ)
+│       ├── config/            # Spring configurations
+│       ├── cache/             # Redis caching
+│       └── messaging/         # Event streaming
 ├── src/test/
-│   ├── unit/                  # Unit tests with mocking
-│   ├── integration/           # Integration tests with Testcontainers
-│   └── load/                  # Performance tests with Gatling
-├── docker/                    # Docker configurations
+│   ├── unit/                  # Unit tests
+│   ├── integration/           # Integration tests
+│   └── performance/           # Load tests
+├── docker/                    # Container configs
 ├── k8s/                       # Kubernetes manifests
-└── docs/                      # API documentation and guides 
-```
-
-### Full Monorepo Structure (with L2 Rollup)
-```
-wallet-rollup/
-├── cryptowallet1/              # Existing Java Spring Boot wallet backend
-│   └── web3-wallet-backend/   # Core wallet service with L1/L2 routing
-├── rollup-node/               # OP Stack L2 node (Go/Rust)
-│   ├── sequencer/             # Block production and sequencing
-│   ├── batcher/               # Batch submission to L1
-│   └── proposer/              # State root proposals
-├── bridge-service/            # Bridge microservice (Node.js/Go)
-│   ├── deposits/              # L1 → L2 deposit handling
-│   ├── withdrawals/           # L2 → L1 withdrawal processing
-│   └── proofs/                # Merkle proof generation
-├── explorer-ui/               # Rollup block explorer (React)
-│   ├── components/            # UI components
-│   ├── services/              # API integration
-│   └── utils/                 # Ethers.js utilities
-├── docker-compose.yml         # Full stack orchestration
-└── docs/                      # Architecture diagrams and guides
+└── docs/                      # Documentation
 ```
 
 ## 🚀 API Endpoints
@@ -232,15 +241,23 @@ web3:
       rpcUrl: ${POLYGON_RPC_URL}
       chainId: 137
       confirmations: 128
+    bsc:
+      rpcUrl: ${BSC_RPC_URL}
+      chainId: 56
+      confirmations: 15
+    avalanche:
+      rpcUrl: ${AVALANCHE_RPC_URL}
+      chainId: 43114
+      confirmations: 1
 
 security:
   jwt:
     secret: ${JWT_SECRET}
     expiration: 3600000
-  kms:
-    provider: aws
-    region: us-east-1
-    keyId: ${KMS_KEY_ID}
+    refreshExpiration: 604800000
+  encryption:
+    algorithm: AES
+    keySize: 256
 
 spring:
   datasource:
@@ -251,6 +268,9 @@ spring:
     host: localhost
     port: 6379
     ttl: 300
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer-group: wallet-service
 ```
 
 ## 🧪 Testing
@@ -259,14 +279,17 @@ spring:
 # Unit tests
 ./mvnw test
 
-# Integration tests
+# Integration tests with Testcontainers
 ./mvnw verify -Pintegration-tests
 
-# Load tests
+# Performance tests
 ./mvnw gatling:test -Dgatling.simulation=WalletLoadTest
 
 # Test coverage report
 ./mvnw jacoco:report
+
+# Run all tests
+./mvnw clean verify
 ```
 
 ## 📊 Monitoring & Observability
@@ -339,43 +362,33 @@ kubectl apply -f k8s/ingress.yaml
 
 ## 🗺️ Roadmap
 
-### Phase 1: Core Infrastructure ✅
-- [x] Basic wallet operations
-- [x] ERC-20 token support
-- [x] Transaction management
-- [x] JWT authentication
+### Phase 1: Core Infrastructure 🚧 (Partially Complete)
+- [x] HD wallet implementation (BIP-32/39/44, address derivation)
+- [x] Basic wallet operations (create, import, balance check)
+- [x] RESTful APIs for wallet creation, transactions, balances
+- [x] ERC-20 token support (basic transfers)
+- [x] Transaction sending with gas management
+- [ ] JWT authentication (currently using basic auth)
+- [ ] Redis session caching
+- [ ] PostgreSQL persistence layer
+- [ ] Docker/Kubernetes deployment setup
 
-### Phase 2: Advanced Features 🚧
-- [x] HD wallet implementation
-- [x] Multi-signature support
-- [ ] Account abstraction (EIP-4337)
-- [ ] Gasless transactions (EIP-2771)
 
-### Phase 3: Layer 2 Rollup Integration 🚧
-- [x] Transaction routing service (L1/L2 decision engine)
-- [ ] OP Stack rollup node deployment
-- [ ] Bridge service for deposits/withdrawals
-- [ ] Rollup block explorer
-- [ ] Cost analysis dashboard (L1 vs L2 savings)
+### Phase 2: Custody Reliability 🚧 (Designed / Partially Planned)
+- [ ] Deposit flow: listener with N confirmations + reorg rollback
+- [ ] Withdrawal flow: queue → nonce manager → sign → broadcast → status
+- [ ] EIP-1559 dynamic gas management with gas bumping
+- [ ] Ledger with exactly-once semantics + idempotency locks
+- [ ] Metrics & Monitoring: Prometheus counters (pending vs confirmed, stuck txs, chain lag)
 
-### Phase 4: Multi-chain Support 📋
-- [ ] Polygon integration
-- [ ] Binance Smart Chain
-- [ ] Avalanche C-Chain
-- [ ] Additional Layer 2 solutions (Arbitrum, zkSync)
-- [ ] Non-EVM chains (Solana, Bitcoin)
+*These are production-grade features designed for exchange-scale reliability.*
 
-### Phase 5: DeFi Integration 📋
-- [ ] Uniswap V3 integration
-- [ ] Lending protocol support (Aave, Compound)
-- [ ] Yield aggregation
-- [ ] Cross-chain bridges
-
-### Phase 6: Enterprise Features 📋
-- [ ] Advanced MPC implementation
-- [ ] Compliance tools (KYC/AML)
-- [ ] White-label solution
-- [ ] Advanced analytics dashboard
+### Phase 3: Extensions 📋 (Future Work / Vision)
+- [ ] Gasless transactions (EIP-2771 meta-tx)
+- [ ] Transaction batching & templates
+- [ ] Multi-sig wallets (2-of-3, 3-of-5)
+- [ ] Polygon / BSC integration (multi-chain adapter)
+- [ ] WebSocket real-time updates
 
 ## 🤝 Contributing
 
@@ -395,7 +408,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Benjamin Lee**  
-Senior Backend Engineer | Web3 Enthusiast
+Backend Engineer | Web3 Enthusiast
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://linkedin.com/in/benjaminlee)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black)](https://github.com/benjaminlee)

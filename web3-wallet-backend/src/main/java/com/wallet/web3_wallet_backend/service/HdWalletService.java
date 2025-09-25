@@ -41,9 +41,9 @@ public class HdWalletService {
     private final MnemonicCode mnemonicCode;
     
     public HdWalletService() {
-        this.secureRandom = new SecureRandom();
+        this.secureRandom = new SecureRandom(); // SecureRandom is a secure random number generator
         try {
-            this.mnemonicCode = MnemonicCode.INSTANCE;
+            this.mnemonicCode = MnemonicCode.INSTANCE; // Singleton instance of MnemonicCode because we dont have to create a new instance every time
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize MnemonicCode", e);
         }
@@ -56,20 +56,37 @@ public class HdWalletService {
      * @return BIP39 mnemonic phrase as a space-separated string
      * @throws IllegalArgumentException if words is not 12 or 24
      */
+    /**
+     * Generates a BIP39 mnemonic phrase with the specified number of words.
+     * 
+     * @param words Number of words for the mnemonic phrase (must be 12 or 24).
+     * @return A space-separated BIP39 mnemonic phrase.
+     * @throws IllegalArgumentException if the word count is not 12 or 24.
+     * @throws RuntimeException if mnemonic generation fails.
+     */
     public String generateMnemonic(int words) {
+        // Validate that the word count is either 12 or 24, as per BIP39 standard.
         if (words != 12 && words != 24) {
             throw new IllegalArgumentException("Word count must be 12 or 24, got: " + words);
         }
         
         try {
-            // Calculate entropy bits: 12 words = 128 bits, 24 words = 256 bits
+            // Calculate the required entropy bits for the given word count.
+            // BIP39: entropyBits = words * 11 - words / 3
+            // For 12 words: 128 bits; for 24 words: 256 bits.
             int entropyBits = words * 11 - words / 3;
             byte[] entropy = new byte[entropyBits / 8];
+            
+            // Fill the entropy array with cryptographically secure random bytes.
             secureRandom.nextBytes(entropy);
             
+            // Convert entropy to mnemonic words using BIP39 wordlist.
             List<String> mnemonicWords = mnemonicCode.toMnemonic(entropy);
+            
+            // Join the words into a single space-separated string.
             return String.join(" ", mnemonicWords);
         } catch (MnemonicException e) {
+            // Wrap and rethrow as unchecked exception for upstream handling.
             throw new RuntimeException("Failed to generate mnemonic", e);
         }
     }

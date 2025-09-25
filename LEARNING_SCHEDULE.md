@@ -380,162 +380,199 @@ gas_price_wei
 
 ---
 
-## Phase 5: Layer 2 Rollup Integration (Weeks 21-24)
+## Phase 5: Custody Reliability Implementation (Weeks 21-24)
 
-### Week 21: Rollup Architecture & Planning
-**Goal:** Design and plan L2 rollup integration with existing wallet backend
+### Week 21: Deposit Flow & Event Monitoring
+**Goal:** Build production-grade deposit processing system
 
-#### Monday-Tuesday: Architecture Design
-- Study OP Stack architecture and components
-- Design routing decision engine (L1 vs L2)
-- Plan monorepo structure for rollup components
-- Define integration points with existing wallet
-
-```
-wallet-rollup/
-├── cryptowallet1/          (existing wallet backend)
-├── rollup-node/           (OP Stack L2 node)
-├── bridge-service/        (deposit/withdrawal service)
-├── explorer-ui/           (rollup block explorer)
-└── docker-compose.yml     (orchestration)
-```
-
-#### Wednesday-Thursday: Routing Service Design
-- Design transaction routing logic
-- Define thresholds for L1/L2 decisions
-- Plan API modifications for route parameter
-- Design fallback mechanisms
+#### Monday-Tuesday: Deposit Listener Architecture
+- Design deposit event listener with N confirmations
+- Implement reorg detection and rollback mechanism
+- Create deposit state machine (pending → confirming → confirmed)
+- Build idempotent deposit processing
 
 ```java
 @Service
-public class TransactionRouter {
-    public Route determineRoute(TransactionRequest tx) {
-        // Amount-based routing
-        // Gas price consideration
-        // User preference override
-        // Network congestion check
-        return tx.amount > THRESHOLD ? Route.L1 : Route.L2;
+public class DepositListener {
+    private static final int REQUIRED_CONFIRMATIONS = 12;
+
+    public void processDeposit(DepositEvent event) {
+        // Check for reorgs
+        // Wait for N confirmations
+        // Update ledger atomically
+        // Emit internal events
     }
 }
 ```
 
-#### Friday-Sunday: Development Environment
-- Set up monorepo structure
-- Configure Docker Compose for all services
-- Prepare test networks (local L1 + L2)
-- Document architecture decisions
+#### Wednesday-Thursday: Ledger Implementation
+- Design double-entry ledger system
+- Implement exactly-once semantics
+- Add idempotency locks for deposits
+- Create audit trail for all balance changes
 
-**Deliverable:** Complete architecture design and development environment
+```sql
+CREATE TABLE ledger_entries (
+    id UUID PRIMARY KEY,
+    wallet_id UUID NOT NULL,
+    amount DECIMAL(36, 18) NOT NULL,
+    type VARCHAR(20) NOT NULL, -- DEPOSIT, WITHDRAWAL
+    tx_hash VARCHAR(66) UNIQUE,
+    confirmations INT DEFAULT 0,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+```
+
+#### Friday-Sunday: Deposit Testing & Monitoring
+- Test deposit flow with various scenarios
+- Implement Prometheus metrics for deposits
+- Add alerting for stuck deposits
+- Create deposit reconciliation reports
+
+**Deliverable:** Reliable deposit system handling reorgs and ensuring exactly-once processing
 
 ---
 
-### Week 22: Rollup Node Implementation
-**Goal:** Deploy and configure OP Stack rollup node
+### Week 22: Withdrawal Queue & Processing
+**Goal:** Implement enterprise-grade withdrawal system
 
-#### Monday-Tuesday: OP Stack Setup
-- Fork OP Stack repository
-- Configure genesis block and chain parameters
-- Set up sequencer node
-- Configure batch submission to L1
+#### Monday-Tuesday: Withdrawal Queue Design
+- Build withdrawal request queue
+- Implement priority queue for VIP users
+- Add withdrawal limits and velocity checks
+- Create approval workflow for large withdrawals
+
+```java
+@Service
+public class WithdrawalQueue {
+    public WithdrawalRequest queueWithdrawal(WithdrawalDto dto) {
+        // Validate balance
+        // Check velocity limits
+        // Lock funds in ledger
+        // Queue for processing
+        return new WithdrawalRequest(id, status.QUEUED);
+    }
+}
+```
+
+#### Wednesday-Thursday: Transaction Broadcasting
+- Implement nonce manager with proper locking
+- Build transaction signing service
+- Create broadcast mechanism with retry logic
+- Add transaction status tracking
+
+```java
+@Service
+public class WithdrawalProcessor {
+    @Scheduled(fixedDelay = 5000)
+    public void processQueue() {
+        // Get next withdrawal
+        // Acquire nonce
+        // Sign transaction
+        // Broadcast to network
+        // Update status
+    }
+}
+```
+
+#### Friday-Sunday: Withdrawal Monitoring
+- Implement confirmation tracking
+- Add stuck transaction detection
+- Create gas bumping for slow transactions
+- Build withdrawal reconciliation
+
+**Deliverable:** Production withdrawal system with queue, nonce management, and monitoring
+
+---
+
+### Week 23: Gas Management & Optimization
+**Goal:** Build sophisticated gas management system
+
+#### Monday-Tuesday: EIP-1559 Implementation
+- Implement dynamic base fee tracking
+- Build priority fee estimation
+- Create gas price oracle aggregator
+- Add network congestion detection
+
+```java
+@Service
+public class GasOracle {
+    public GasPrice getOptimalGasPrice() {
+        // Query multiple sources
+        // Calculate percentiles
+        // Apply business rules
+        // Return tiered pricing (slow/medium/fast)
+    }
+}
+```
+
+#### Wednesday-Thursday: Transaction Replacement
+- Implement transaction speed-up mechanism
+- Build transaction cancellation
+- Create gas bumping strategy
+- Add replacement transaction tracking
+
+#### Friday-Sunday: Gas Analytics
+- Build gas usage analytics
+- Create cost reports per wallet
+- Implement gas limit optimization
+- Add predictive gas pricing
+
+**Deliverable:** Advanced gas management with EIP-1559, bumping, and analytics
+
+---
+
+### Week 24: Metrics, Monitoring & Production Hardening
+**Goal:** Complete production monitoring and reliability features
+
+#### Monday-Tuesday: Comprehensive Metrics
+- Implement Prometheus metrics for all operations
+- Create custom metrics for custody operations
+- Build metric aggregation service
+- Add business metrics dashboard
+
+```java
+@Component
+public class CustodyMetrics {
+    private final Counter depositCounter;
+    private final Counter withdrawalCounter;
+    private final Gauge pendingWithdrawals;
+    private final Histogram confirmationTime;
+
+    public void recordDeposit(DepositEvent event) {
+        depositCounter.labels(event.getStatus()).inc();
+        confirmationTime.observe(event.getConfirmationTime());
+    }
+}
+```
+
+#### Wednesday-Thursday: Production Monitoring
+- Create Grafana dashboards for custody operations
+- Implement alerting rules for critical events
+- Add PagerDuty integration
+- Build runbook for common issues
 
 ```yaml
-# rollup-config.yaml
-l1_chain_id: 1
-l2_chain_id: 42069
-sequencer_address: "0x..."
-batch_inbox_address: "0x..."
-deposit_contract_address: "0x..."
+# Prometheus alerts
+groups:
+  - name: custody_alerts
+    rules:
+      - alert: StuckWithdrawal
+        expr: withdrawal_pending_minutes > 30
+      - alert: DepositReorgDetected
+        expr: deposit_reorg_total > 0
+      - alert: NonceMismatch
+        expr: nonce_gap_total > 0
 ```
 
-#### Wednesday-Thursday: Node Operations
-- Implement block production
-- Configure state commitment intervals
-- Set up fraud proof window
-- Test transaction execution
+#### Friday-Sunday: Final Hardening
+- Implement circuit breakers for external calls
+- Add comprehensive error handling
+- Create disaster recovery procedures
+- Document operational runbooks
 
-#### Friday-Sunday: Integration with Wallet
-- Connect wallet backend to rollup RPC
-- Implement dual-network transaction sending
-- Add rollup balance queries
-- Test end-to-end transaction flow
-
-**Deliverable:** Running L2 rollup node processing transactions
-
----
-
-### Week 23: Bridge Service Development
-**Goal:** Build bridge for L1↔L2 asset transfers
-
-#### Monday-Tuesday: Deposit Flow
-- Implement L1 deposit contract interaction
-- Create deposit event monitoring
-- Build L2 credit minting logic
-- Add deposit status tracking
-
-```java
-@Service
-public class BridgeService {
-    public DepositResult deposit(DepositRequest request) {
-        // Lock tokens on L1
-        // Emit deposit event
-        // Wait for L2 inclusion
-        // Confirm L2 balance update
-    }
-}
-```
-
-#### Wednesday-Thursday: Withdrawal Flow
-- Implement L2 withdrawal initiation
-- Build proof generation system
-- Create L1 withdrawal finalizer
-- Add challenge period handling
-
-#### Friday-Sunday: Bridge UI & Testing
-- Create bridge frontend interface
-- Implement deposit/withdrawal status page
-- Test various asset types (ETH, ERC-20)
-- Load test bridge operations
-
-**Deliverable:** Functional bridge supporting bidirectional transfers
-
----
-
-### Week 24: Explorer & Production Readiness
-**Goal:** Complete rollup explorer and prepare for production
-
-#### Monday-Tuesday: Explorer Development
-- Build block explorer UI (React + Ethers.js)
-- Display rollup blocks and transactions
-- Show L1 data availability batches
-- Implement search functionality
-
-```javascript
-// Explorer components
-const ExplorerUI = () => {
-  return (
-    <div>
-      <BlockList />
-      <TransactionTable />
-      <BridgeStatus />
-      <NetworkStats />
-    </div>
-  );
-};
-```
-
-#### Wednesday-Thursday: Monitoring & Analytics
-- Add rollup-specific metrics to Prometheus
-- Create Grafana dashboards for L2 metrics
-- Implement cost analysis (L1 vs L2 savings)
-- Set up alerting for rollup issues
-
-#### Friday-Sunday: Final Integration Testing
-- End-to-end testing of complete system
-- Performance benchmarking (TPS, latency)
-- Security audit of rollup components
-- Documentation and deployment guide
-
-**Deliverable:** Production-ready L2 rollup with explorer and monitoring
+**Deliverable:** Production-ready custody system with comprehensive monitoring
 
 ---
 
@@ -567,18 +604,18 @@ const ExplorerUI = () => {
 
 ## 🎯 Success Metrics
 
-By the end of 20 weeks, you should be able to:
+By the end of 24 weeks, you should be able to:
 
-✅ Explain blockchain and Ethereum architecture in detail  
-✅ Generate and manage HD wallets securely  
-✅ Send transactions with proper gas management  
-✅ Handle ERC-20 tokens and NFTs  
-✅ Implement production-grade security  
-✅ Monitor and debug blockchain applications  
-✅ Deploy and maintain wallet infrastructure  
-✅ Handle 500+ transactions per second  
-✅ Support multiple EVM chains  
-✅ Implement enterprise key management  
+✅ Build HD wallets with BIP-32/39/44 standards
+✅ Implement secure JWT authentication with Redis caching
+✅ Design PostgreSQL schema for custody operations
+✅ Handle deposits with N confirmations and reorg protection
+✅ Build withdrawal queues with nonce management
+✅ Implement EIP-1559 gas optimization with bumping
+✅ Create ledger with exactly-once semantics
+✅ Monitor custody operations with Prometheus/Grafana
+✅ Handle 1000+ transactions per second
+✅ Support production exchange-scale operations  
 
 ---
 
@@ -596,11 +633,12 @@ By the end of 20 weeks, you should be able to:
 
 ## 🚀 Next Steps After Completion
 
-- Contribute to open-source Web3 projects
-- Build a DeFi integration (Uniswap, Aave)
-- Add non-EVM chain support (Solana, Cosmos)
-- Implement advanced features (social recovery, account abstraction)
-- Apply for Web3 positions at companies like Binance, Coinbase, ConsenSys
+- Implement gasless transactions (EIP-2771 meta-transactions)
+- Add multi-signature wallet support (2-of-3, 3-of-5)
+- Integrate additional EVM chains (Polygon, BSC, Avalanche)
+- Build WebSocket real-time update system
+- Contribute to open-source custody solutions
+- Apply for custody/infrastructure positions at exchanges and Web3 companies
 
 ---
 

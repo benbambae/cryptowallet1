@@ -1,29 +1,29 @@
-spring:
-  application:
-    name: Web3 Wallet Backend
+  spring:
+    application:
+      name: Web3 Wallet Backend
 
-  security:
-    user:
-      name: admin
-      password: admin
+    security:
+      user:
+        name: admin
+        password: admin
 
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: ${H2_USERNAME:sa}
-    password: ${H2_PASSWORD:password}
+    datasource:
+      url: jdbc:h2:file:./data/wallet_dev;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE
+      driver-class-name: org.h2.Driver
+      username: ${H2_USERNAME:sa}
+      password: ${H2_PASSWORD:password}
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
+    jpa:
       hibernate:
-        format_sql: true
+        ddl-auto: validate
+      properties:
+        hibernate:
+          format_sql: true
 
-  flyway:
-    enabled: false   # disable Flyway until you add migration scripts
+    flyway:
+      enabled: true
 
 
-web3:
-  ethereum:
-    rpcUrl: https://sepolia.infura.io/v3/a8ce71b1d84d4b2bad66bb01c685926f
+  web3:
+    ethereum:
+      rpcUrl: https://sepolia.infura.io/v3/a8ce71b1d84d4b2bad66bb01c685926f

@@ -1,6 +1,8 @@
 package com.wallet.web3_wallet_backend.service;
 
 import com.wallet.web3_wallet_backend.model.Wallet;
+import com.wallet.web3_wallet_backend.model.WalletEntity;
+import com.wallet.web3_wallet_backend.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
@@ -11,6 +13,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Optional;
 
 import static org.web3j.utils.Convert.fromWei;
 import static org.web3j.utils.Convert.Unit.ETHER;
@@ -24,16 +27,21 @@ public class WalletService {
     /** Web3j instance for blockchain interaction. */
     private final Web3j web3j;
 
+    /** Repository for wallet persistence. */
+    private final WalletRepository walletRepository;
+
     /**
-     * Constructs a WalletService with the provided Web3j instance.
+     * Constructs a WalletService with the provided Web3j instance and WalletRepository.
      * @param web3j the Web3j instance to use for blockchain operations
+     * @param walletRepository the repository for wallet persistence
      */
-    public WalletService(Web3j web3j) {
+    public WalletService(Web3j web3j, WalletRepository walletRepository) {
         this.web3j = web3j;
+        this.walletRepository = walletRepository;
     }
 
     /**
-     * Create a fresh wallet (in-memory for demo). Persist securely in real use.
+     * Create a fresh wallet and save it to the database.
      * @return a new Wallet object with generated keys and address
      * @throws RuntimeException if wallet creation fails
      */
@@ -44,9 +52,15 @@ public class WalletService {
             String publicKeyHex = Numeric.toHexStringNoPrefix(keyPair.getPublicKey());
             String address = "0x" + Keys.getAddress(keyPair.getPublicKey());
 
+            // Save to database
+            WalletEntity entity = new WalletEntity();
+            entity.setAddress(address);
+            entity.setPublicKey(publicKeyHex);
+            entity.setWalletType(WalletEntity.WalletType.STANDARD);
+            // Note: Not storing private key in database for security
+            walletRepository.save(entity);
+
             Wallet wallet = new Wallet(address, publicKeyHex, privateKeyHex, BigDecimal.ZERO);
-            // Note: Balance fetching removed to avoid Ethereum node dependency during wallet creation
-            // Balance can be fetched separately via getBalance() when needed
             return wallet;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create wallet", e);
@@ -54,7 +68,7 @@ public class WalletService {
     }
 
     /**
-     * Import a wallet from a raw private key hex (0x-prefixed or not).
+     * Import a wallet from a raw private key hex and save it to the database.
      * @param privateKeyHex the private key in hex format
      * @return a Wallet object corresponding to the imported private key
      * @throws IllegalArgumentException if the private key is invalid
@@ -67,13 +81,29 @@ public class WalletService {
             String publicKeyHex = Numeric.toHexStringNoPrefix(keyPair.getPublicKey());
             String address = "0x" + Keys.getAddress(keyPair.getPublicKey());
 
+            // Save to database if not already exists
+            if (!walletRepository.existsByAddress(address)) {
+                WalletEntity entity = new WalletEntity();
+                entity.setAddress(address);
+                entity.setPublicKey(publicKeyHex);
+                entity.setWalletType(WalletEntity.WalletType.STANDARD);
+                walletRepository.save(entity);
+            }
+
             Wallet wallet = new Wallet(address, publicKeyHex, add0x(normalized), BigDecimal.ZERO);
-            // Note: Balance fetching removed to avoid Ethereum node dependency during wallet import
-            // Balance can be fetched separately via getBalance() when needed
             return wallet;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid private key", e);
         }
+    }
+
+    /**
+     * Find a wallet by address from the database.
+     * @param address the wallet address
+     * @return Optional containing the WalletEntity if found
+     */
+    public Optional<WalletEntity> findByAddress(String address) {
+        return walletRepository.findByAddress(address);
     }
 
     /**

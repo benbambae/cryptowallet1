@@ -107,6 +107,14 @@ public class WalletService {
     }
 
     /**
+     * Get all wallets from the database.
+     * @return List of all WalletEntity objects
+     */
+    public java.util.List<WalletEntity> findAll() {
+        return walletRepository.findAll();
+    }
+
+    /**
      * Get ETH/EVM coin balance (native token) in ETHER as BigDecimal.
      * @param address the wallet address to query
      * @return the balance in Ether as BigDecimal

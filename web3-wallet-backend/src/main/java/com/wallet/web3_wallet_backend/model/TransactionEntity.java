@@ -23,7 +23,7 @@ public class TransactionEntity {
     @Column(name = "to_address", nullable = false, length = 42)
     private String toAddress;
 
-    @Column(nullable = false, precision = 36, scale = 18)
+    @Column(name = "\"value\"", nullable = false, precision = 36, scale = 18)
     private BigDecimal value;
 
     @Column(name = "gas_limit")

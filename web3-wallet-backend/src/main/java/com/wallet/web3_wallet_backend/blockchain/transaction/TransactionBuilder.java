@@ -1,6 +1,5 @@
 package com.wallet.web3_wallet_backend.blockchain.transaction;
 
-import org.springframework.stereotype.Component;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
@@ -8,17 +7,18 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
-@Component
 public class TransactionBuilder {
-    
+
     private final long chainId;
-    
+
     public TransactionBuilder() {
         this.chainId = 1L;
+        System.out.println("[DEBUG] TransactionBuilder created with default chainId: " + this.chainId);
     }
-    
+
     public TransactionBuilder(long chainId) {
         this.chainId = chainId;
+        System.out.println("[DEBUG] TransactionBuilder created with chainId: " + this.chainId);
     }
     
     public RawTransaction buildLegacyTransaction(
@@ -61,14 +61,16 @@ public class TransactionBuilder {
     }
     
     public String signTransaction(RawTransaction transaction, Credentials credentials) {
+        System.out.println("[DEBUG] Signing transaction with chainId: " + this.chainId);
         byte[] signedMessage;
-        
+
         if (isEIP1559Transaction(transaction)) {
             signedMessage = TransactionEncoder.signMessage(transaction, chainId, credentials);
         } else {
-            signedMessage = TransactionEncoder.signMessage(transaction, credentials);
+            // Legacy transactions should also use chain ID (EIP-155)
+            signedMessage = TransactionEncoder.signMessage(transaction, chainId, credentials);
         }
-        
+
         return Numeric.toHexString(signedMessage);
     }
     

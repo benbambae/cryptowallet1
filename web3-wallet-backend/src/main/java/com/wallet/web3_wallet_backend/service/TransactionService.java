@@ -28,15 +28,18 @@ public class TransactionService {
     private final NonceManager nonceManager;
     private final TransactionBuilder transactionBuilder;
     private final WalletService walletService;
+    private final com.wallet.web3_wallet_backend.repository.TransactionRepository transactionRepository;
 
     // Constructor injection for dependencies
     public TransactionService(Web3j web3j, GasManager gasManager, NonceManager nonceManager,
-                              TransactionBuilder transactionBuilder, WalletService walletService) {
+                              TransactionBuilder transactionBuilder, WalletService walletService,
+                              com.wallet.web3_wallet_backend.repository.TransactionRepository transactionRepository) {
         this.web3j = web3j;
         this.gasManager = gasManager;
         this.nonceManager = nonceManager;
         this.transactionBuilder = transactionBuilder;
         this.walletService = walletService;
+        this.transactionRepository = transactionRepository;
     }
 
     /**
@@ -105,6 +108,24 @@ public class TransactionService {
 
         // Sign the transaction with the sender's private key
         Credentials credentials = Credentials.create(normalizePrivateKey(request.privateKey()));
+
+        // Verify private key matches the from address
+        String derivedAddress = credentials.getAddress();
+        System.out.println("[DEBUG] Address derived from private key: " + derivedAddress);
+        System.out.println("[DEBUG] Requested from address: " + from);
+
+        if (!derivedAddress.equalsIgnoreCase(from)) {
+            throw new RuntimeException("Private key does not match the 'from' address. " +
+                    "Private key controls: " + derivedAddress + ", but you specified: " + from);
+        }
+
+        System.out.println("[DEBUG] Transaction details:");
+        System.out.println("  From: " + from);
+        System.out.println("  To: " + to);
+        System.out.println("  Value (Wei): " + value);
+        System.out.println("  Nonce: " + nonce);
+        System.out.println("  Gas Limit: " + gasLimit);
+
         String signedTx = transactionBuilder.signTransaction(rawTransaction, credentials);
 
         // Send the signed transaction to the blockchain
@@ -113,6 +134,8 @@ public class TransactionService {
         // If there is an error, release the nonce and throw an exception
         if (ethSendTransaction.hasError()) {
             nonceManager.releaseNonce(from, nonce);
+            System.err.println("[ERROR] Transaction failed: " + ethSendTransaction.getError().getMessage());
+            System.err.println("[ERROR] Error code: " + ethSendTransaction.getError().getCode());
             throw new RuntimeException("Transaction failed: " + ethSendTransaction.getError().getMessage());
         }
 
@@ -452,5 +475,43 @@ public class TransactionService {
         } else {
             return TransactionHistoryResponse.TransactionSummary.Direction.INCOMING;
         }
+    }
+
+    /**
+     * Get transaction history for a specific address.
+     * Returns all transactions from or to the address, sorted by newest first.
+     */
+    public TransactionHistoryResponse getTransactionHistory(String address) {
+        // Get all transactions from database
+        java.util.List<com.wallet.web3_wallet_backend.model.TransactionEntity> entities =
+            transactionRepository.findByFromAddressOrToAddressOrderByCreatedAtDesc(address, address);
+
+        // Convert entities to transaction summaries
+        java.util.List<TransactionHistoryResponse.TransactionSummary> summaries =
+            entities.stream().map(entity -> {
+                TransactionHistoryResponse.TransactionSummary.Direction direction =
+                    determineTransactionDirection(address, entity.getFromAddress(), entity.getToAddress());
+
+                return new TransactionHistoryResponse.TransactionSummary(
+                    entity.getTxHash(),
+                    entity.getFromAddress(),
+                    entity.getToAddress(),
+                    entity.getValue(),
+                    direction,
+                    entity.getStatus().toString(),
+                    entity.getCreatedAt(),
+                    entity.getBlockNumber(),
+                    entity.getGasUsed(),
+                    entity.getGasPrice()
+                );
+            }).toList();
+
+        return new TransactionHistoryResponse(
+            address,
+            summaries,
+            summaries.size(),
+            1,  // page
+            summaries.size()  // pageSize
+        );
     }
 }

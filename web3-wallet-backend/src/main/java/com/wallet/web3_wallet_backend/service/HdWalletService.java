@@ -177,8 +177,8 @@ public class HdWalletService {
             DeterministicKey addressKey = HDKeyDerivation.deriveChildKey(changeKey, index);
             
             BigInteger privateKey = addressKey.getPrivKey();
-            BigInteger publicKey = new BigInteger(1, addressKey.getPubKey());
-            
+            BigInteger publicKey = new BigInteger(1, addressKey.getPubKeyPoint().getEncoded(false));
+
             // Generate Ethereum address from public key
             String ethereumAddress = ethAddressFromPublicKey(publicKey);
             

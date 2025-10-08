@@ -4,7 +4,7 @@ CREATE TABLE wallets (
     address VARCHAR(42) NOT NULL,
     public_key VARCHAR(130),
     wallet_type VARCHAR(20) NOT NULL,
-    encrypted_private_key TEXT,
+    encrypted_private_key CLOB,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     PRIMARY KEY (id)
@@ -20,7 +20,7 @@ CREATE TABLE transactions (
     tx_hash VARCHAR(66) NOT NULL,
     from_address VARCHAR(42) NOT NULL,
     to_address VARCHAR(42) NOT NULL,
-    "value" DECIMAL(36, 18) NOT NULL,
+    value DECIMAL(36, 18) NOT NULL,
     gas_limit BIGINT,
     gas_price DECIMAL(36, 18),
     gas_used BIGINT,
@@ -44,8 +44,8 @@ CREATE INDEX idx_transactions_created_at ON transactions(created_at);
 CREATE TABLE hd_wallets (
     id UUID NOT NULL,
     wallet_id UUID NOT NULL,
-    mnemonic_encrypted TEXT,
-    xpub TEXT,
+    mnemonic_encrypted CLOB,
+    xpub CLOB,
     derivation_path VARCHAR(100),
     account_index INTEGER DEFAULT 0,
     created_at TIMESTAMP NOT NULL,

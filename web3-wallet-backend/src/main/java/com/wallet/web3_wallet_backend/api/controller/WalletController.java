@@ -124,16 +124,50 @@ public class WalletController {
                 return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Mnemonic must have 12 or 24 words, got: " + words.length));
             }
-            
+
             // Derive key
             byte[] seed = hdWalletService.seedFromMnemonic(request.mnemonic(), "");
             ExtendedKey root = hdWalletService.rootFromSeed(seed);
             DerivedKey derivedKey = hdWalletService.deriveEthKey(root, request.account(), request.change(), request.index());
-            
+
             return ResponseEntity.ok(new DeriveKeyResponse(
-                request.index(), 
-                derivedKey.ethereumAddress(), 
+                request.index(),
+                derivedKey.ethereumAddress(),
                 derivedKey.derivationPath()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Failed to derive key: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Derive key WITH private key exposed (TEST ONLY - DO NOT USE IN PRODUCTION).
+     */
+    @PostMapping("/api/wallets/derive-with-private")
+    @Operation(summary = "Derive key with private key (TEST ONLY)", description = "⚠️ WARNING: Exposes private key! For testing only!")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Key derived successfully with private key"),
+        @ApiResponse(responseCode = "400", description = "Invalid mnemonic or parameters")
+    })
+    public ResponseEntity<?> deriveKeyWithPrivate(@Valid @RequestBody DeriveKeyRequest request) {
+        try {
+            // Validate mnemonic word count
+            String[] words = request.mnemonic().trim().split("\\s+");
+            if (words.length != 12 && words.length != 24) {
+                return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Mnemonic must have 12 or 24 words, got: " + words.length));
+            }
+
+            // Derive key
+            byte[] seed = hdWalletService.seedFromMnemonic(request.mnemonic(), "");
+            ExtendedKey root = hdWalletService.rootFromSeed(seed);
+            DerivedKey derivedKey = hdWalletService.deriveEthKey(root, request.account(), request.change(), request.index());
+
+            return ResponseEntity.ok(new DeriveKeyWithPrivateResponse(
+                request.index(),
+                derivedKey.ethereumAddress(),
+                derivedKey.derivationPath(),
+                derivedKey.getPrivateKeyHexWith0x()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Failed to derive key: " + e.getMessage()));
@@ -214,5 +248,56 @@ public class WalletController {
     })
     public ResponseEntity<?> signMessage(@RequestBody SignMessageRequest req) {
         return ResponseEntity.status(501).body(new ErrorResponse("Message signing endpoint is not implemented; do not send private keys to the backend."));
+    }
+
+    /**
+     * List all wallets stored in the database.
+     */
+    @GetMapping("/api/v1/wallets")
+    @Operation(summary = "List all wallets", description = "Get a list of all wallets stored in the database")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Wallets retrieved successfully")
+    })
+    public ResponseEntity<?> listWallets() {
+        var wallets = walletService.findAll();
+        return ResponseEntity.ok(wallets);
+    }
+
+    /**
+     * Find derivation path for a target address.
+     */
+    @PostMapping("/api/wallets/find-path")
+    @Operation(summary = "Find derivation path", description = "Search for the derivation path that produces the target address")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Path found"),
+        @ApiResponse(responseCode = "404", description = "Path not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid mnemonic")
+    })
+    public ResponseEntity<?> findDerivationPath(@Valid @RequestBody FindPathRequest request) {
+        try {
+            String targetAddress = request.targetAddress().toLowerCase();
+            byte[] seed = hdWalletService.seedFromMnemonic(request.mnemonic(), "");
+            ExtendedKey root = hdWalletService.rootFromSeed(seed);
+
+            // Search through first 10 accounts and 20 addresses per account
+            for (int account = 0; account < 10; account++) {
+                for (int index = 0; index < 20; index++) {
+                    DerivedKey key = hdWalletService.deriveEthKey(root, account, 0, index);
+                    if (key.ethereumAddress().toLowerCase().equals(targetAddress)) {
+                        return ResponseEntity.ok(new DeriveKeyWithPrivateResponse(
+                            index,
+                            key.ethereumAddress(),
+                            key.derivationPath(),
+                            key.getPrivateKeyHexWith0x()
+                        ));
+                    }
+                }
+            }
+
+            return ResponseEntity.status(404).body(new ErrorResponse(
+                "Address not found in first 10 accounts × 20 addresses. Try searching manually with different indices."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Failed to search: " + e.getMessage()));
+        }
     }
 }

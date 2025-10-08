@@ -53,7 +53,17 @@ public class TransactionController {
             return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to get transaction status: " + e.getMessage()));
         }
     }
-    
+
+    @GetMapping("/history/{address}")
+    public ResponseEntity<?> getTransactionHistory(@PathVariable String address) {
+        try {
+            TransactionHistoryResponse response = transactionService.getTransactionHistory(address);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to get transaction history: " + e.getMessage()));
+        }
+    }
+
     public record GasEstimateRequest(
         String from,
         String to,

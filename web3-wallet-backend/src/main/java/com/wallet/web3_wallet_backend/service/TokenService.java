@@ -7,6 +7,7 @@ import com.wallet.web3_wallet_backend.api.dto.TransactionResponse;
 import com.wallet.web3_wallet_backend.blockchain.contract.ERC20Contract;
 import com.wallet.web3_wallet_backend.blockchain.transaction.GasManager;
 import com.wallet.web3_wallet_backend.blockchain.transaction.TransactionBuilder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
@@ -40,7 +41,9 @@ public class TokenService {
 
     /**
      * Get token information (name, symbol, decimals, total supply).
+     * Cached for 5 minutes to reduce RPC calls.
      */
+    @Cacheable(value = "tokenInfo", key = "#contractAddress")
     public TokenInfoResponse getTokenInfo(String contractAddress) throws Exception {
         ERC20Contract contract = new ERC20Contract(web3j, contractAddress);
 
@@ -60,7 +63,9 @@ public class TokenService {
 
     /**
      * Get token balance for an address.
+     * Cached for 5 minutes to reduce RPC calls.
      */
+    @Cacheable(value = "tokenBalance", key = "#address + ':' + #contractAddress")
     public TokenBalanceResponse getTokenBalance(String address, String contractAddress) throws Exception {
         ERC20Contract contract = new ERC20Contract(web3j, contractAddress);
 

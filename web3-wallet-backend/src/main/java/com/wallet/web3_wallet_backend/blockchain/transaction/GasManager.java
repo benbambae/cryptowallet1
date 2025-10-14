@@ -1,5 +1,6 @@
 package com.wallet.web3_wallet_backend.blockchain.transaction;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -79,10 +80,12 @@ public class GasManager {
     /**
      * Retrieves gas prices for legacy transactions (pre-EIP-1559).
      * Provides slow, medium, and fast gas price options based on network conditions.
-     * 
+     * Cached for 30 seconds to reduce RPC calls.
+     *
      * @return GasPrices object containing slow, medium, and fast gas prices
      * @throws IOException if the network request fails
      */
+    @Cacheable(value = "gasPrices", key = "'legacy'")
     public GasPrices getLegacyGasPrices() throws IOException {
         EthGasPrice ethGasPrice = web3j.ethGasPrice().send();
         BigInteger basePrice = ethGasPrice.getGasPrice();
@@ -98,11 +101,13 @@ public class GasManager {
     /**
      * Retrieves gas prices for EIP-1559 transactions.
      * Calculates both maxFeePerGas and maxPriorityFeePerGas based on recent network activity.
-     * 
+     * Cached for 30 seconds to reduce RPC calls.
+     *
      * @return EIP1559GasPrices object containing max fee and priority fee options
      * @throws IOException if the network request fails
      * @throws UnsupportedOperationException if the network doesn't support EIP-1559
      */
+    @Cacheable(value = "gasPrices", key = "'eip1559'")
     public EIP1559GasPrices getEIP1559GasPrices() throws IOException {
         EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false)
             .send()

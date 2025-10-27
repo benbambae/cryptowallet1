@@ -606,16 +606,16 @@ groups:
 
 By the end of 24 weeks, you should be able to:
 
-✅ Build HD wallets with BIP-32/39/44 standards
-✅ Implement secure JWT authentication with Redis caching
-✅ Design PostgreSQL schema for custody operations
-✅ Handle deposits with N confirmations and reorg protection
-✅ Build withdrawal queues with nonce management
-✅ Implement EIP-1559 gas optimization with bumping
-✅ Create ledger with exactly-once semantics
-✅ Monitor custody operations with Prometheus/Grafana
-✅ Handle 1000+ transactions per second
-✅ Support production exchange-scale operations  
+  Build HD wallets with BIP-32/39/44 standards
+  Implement secure JWT authentication with Redis caching
+  Design PostgreSQL schema for custody operations
+  Handle deposits with N confirmations and reorg protection
+  Build withdrawal queues with nonce management
+  Implement EIP-1559 gas optimization with bumping
+  Create ledger with exactly-once semantics
+  Monitor custody operations with Prometheus/Grafana
+  Handle 1000+ transactions per second
+  Support production exchange-scale operations  
 
 ---
 
